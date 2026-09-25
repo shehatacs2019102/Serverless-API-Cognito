@@ -1,6 +1,6 @@
 # Serverless To-Do API on AWS
 # https://d1ug2ctjcyym6g.cloudfront.net/
-My graduation project for the AWS Solutions Architect Associate track at Manara (Project 3).
+My graduation project for the AWS Solutions Architect Associate track at Manara (Project 3:  Serverless REST API with Cognito Auth, DynamoDB & WAF).
 
 It's a simple to-do app where you sign up, log in and manage your own tasks. There are no servers. The backend is API Gateway + Lambda + DynamoDB, login is handled by Cognito, and the frontend is a static page on S3 served through CloudFront. 
 
