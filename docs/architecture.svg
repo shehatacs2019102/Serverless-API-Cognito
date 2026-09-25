@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="head" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#414D5C"/>
+    </marker>
+  </defs>
+
+  <rect width="960" height="600" fill="#ffffff"/>
+  <text x="480" y="26" text-anchor="middle" font-size="18" font-weight="bold" fill="#232F3E">Serverless To-Do App: Architecture</text>
+
+  <!-- AWS Cloud -->
+  <rect x="240" y="44" width="690" height="530" fill="none" stroke="#232F3E" stroke-width="1.5"/>
+  <rect x="240" y="44" width="28" height="28" fill="#232F3E"/>
+  <path d="M247,63 a5,5 0 0 1 2,-9 a7,7 0 0 1 13,1 a4,4 0 0 1 0,8 z" fill="#ffffff"/>
+  <text x="276" y="63" font-size="13" font-weight="bold" fill="#232F3E">AWS Cloud</text>
+
+  <!-- Users -->
+  <g>
+    <circle cx="92" cy="266" r="14" fill="#232F3E"/>
+    <path d="M64,314 a28,26 0 0 1 56,0 z" fill="#232F3E"/>
+    <text x="92" y="336" text-anchor="middle" font-size="14" font-weight="bold" fill="#232F3E">Users</text>
+    <text x="92" y="352" text-anchor="middle" font-size="11" fill="#687078">web browser</text>
+  </g>
+
+  <!-- CloudFront (globe) -->
+  <g>
+    <rect x="300" y="90" width="64" height="64" rx="8" fill="#8C4FFF"/>
+    <circle cx="332" cy="122" r="18" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <ellipse cx="332" cy="122" rx="8" ry="18" fill="none" stroke="#fff" stroke-width="2"/>
+    <line x1="314" y1="122" x2="350" y2="122" stroke="#fff" stroke-width="2"/>
+    <text x="332" y="174" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">CloudFront</text>
+    <text x="332" y="189" text-anchor="middle" font-size="11" fill="#687078">CDN, HTTPS</text>
+  </g>
+
+  <!-- S3 (bucket) -->
+  <g>
+    <rect x="500" y="90" width="64" height="64" rx="8" fill="#7AA116"/>
+    <path d="M514,108 L518,138 Q532,144 546,138 L550,108" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <ellipse cx="532" cy="108" rx="18" ry="5" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <text x="532" y="174" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">S3 Bucket</text>
+    <text x="532" y="189" text-anchor="middle" font-size="11" fill="#687078">private, website files</text>
+  </g>
+
+  <!-- API Gateway -->
+  <g>
+    <rect x="300" y="250" width="64" height="64" rx="8" fill="#E7157B"/>
+    <text x="332" y="292" text-anchor="middle" font-size="26" font-weight="bold" fill="#fff">{ }</text>
+    <text x="332" y="334" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">API Gateway</text>
+    <text x="332" y="349" text-anchor="middle" font-size="11" fill="#687078">REST API /todos</text>
+  </g>
+
+  <!-- Lambda -->
+  <g>
+    <rect x="500" y="250" width="64" height="64" rx="8" fill="#ED7100"/>
+    <text x="532" y="298" text-anchor="middle" font-size="40" font-weight="bold" fill="#fff">λ</text>
+    <text x="532" y="334" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">Lambda</text>
+    <text x="532" y="349" text-anchor="middle" font-size="11" fill="#687078">Python CRUD function</text>
+  </g>
+
+  <!-- DynamoDB (stacked disks) -->
+  <g>
+    <rect x="700" y="250" width="64" height="64" rx="8" fill="#C925D1"/>
+    <ellipse cx="732" cy="266" rx="16" ry="5" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <path d="M716,266 v28 a16,5 0 0 0 32,0 v-28" fill="none" stroke="#fff" stroke-width="2.5"/>
+    <path d="M716,280 a16,5 0 0 0 32,0" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="732" y="334" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">DynamoDB</text>
+    <text x="732" y="349" text-anchor="middle" font-size="11" fill="#687078">Todos table</text>
+  </g>
+
+  <!-- Cognito (padlock) -->
+  <g>
+    <rect x="300" y="440" width="64" height="64" rx="8" fill="#DD344C"/>
+    <path d="M322,468 v-8 a10,10 0 0 1 20,0 v8" fill="none" stroke="#fff" stroke-width="3"/>
+    <rect x="316" y="468" width="32" height="22" rx="3" fill="#fff"/>
+    <circle cx="332" cy="479" r="3" fill="#DD344C"/>
+    <text x="332" y="524" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">Cognito</text>
+    <text x="332" y="539" text-anchor="middle" font-size="11" fill="#687078">user pool, login page</text>
+  </g>
+
+  <!-- CloudWatch (chart line) -->
+  <g>
+    <rect x="500" y="440" width="64" height="64" rx="8" fill="#E7157B"/>
+    <polyline points="514,488 524,474 534,482 550,460" fill="none" stroke="#fff" stroke-width="3"/>
+    <line x1="512" y1="492" x2="552" y2="492" stroke="#fff" stroke-width="2"/>
+    <text x="532" y="524" text-anchor="middle" font-size="13" font-weight="bold" fill="#232F3E">CloudWatch</text>
+    <text x="532" y="539" text-anchor="middle" font-size="11" fill="#687078">logs</text>
+  </g>
+
+  <!-- IAM note -->
+  <rect x="640" y="440" width="250" height="56" rx="6" fill="#ffffff" stroke="#DD344C" stroke-dasharray="5 4"/>
+  <text x="765" y="463" text-anchor="middle" font-size="12" font-weight="bold" fill="#232F3E">IAM role for Lambda</text>
+  <text x="765" y="482" text-anchor="middle" font-size="11" fill="#687078">can only access the Todos table</text>
+
+  <!-- Connections -->
+  <g stroke="#414D5C" stroke-width="2" fill="none" marker-end="url(#head)">
+    <line x1="126" y1="258" x2="296" y2="128"/>
+    <line x1="368" y1="122" x2="496" y2="122"/>
+    <line x1="128" y1="282" x2="296" y2="282"/>
+    <line x1="368" y1="282" x2="496" y2="282"/>
+    <line x1="568" y1="282" x2="696" y2="282"/>
+    <line x1="126" y1="306" x2="296" y2="466"/>
+    <line x1="332" y1="358" x2="332" y2="436" stroke-dasharray="6 4"/>
+    <line x1="532" y1="358" x2="532" y2="436" stroke-dasharray="6 4"/>
+  </g>
+
+  <!-- Connection labels -->
+  <g font-size="11" fill="#414D5C">
+    <text x="128" y="176">1. open site</text>
+    <text x="432" y="114" text-anchor="middle">2. get files (OAC)</text>
+    <text x="146" y="274">4. API call + token</text>
+    <text x="432" y="274" text-anchor="middle">6. invoke</text>
+    <text x="632" y="274" text-anchor="middle">7. read / write</text>
+    <text x="116" y="442">3. sign in, get token</text>
+    <text x="340" y="402">5. check token</text>
+    <text x="540" y="402">logs</text>
+  </g>
+</svg>

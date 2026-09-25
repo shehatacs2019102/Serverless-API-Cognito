@@ -1,0 +1,1 @@
+//Add your own config.js from cloudformation outputs

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serverless To-Do</title>
+  <script src="config.js"></script>
+  <style>
+    [hidden] { display: none !important; }
+    body { font-family: system-ui, sans-serif; background: #f4f5f7; margin: 0; color: #1f2328; }
+    main { max-width: 560px; margin: 48px auto; padding: 0 16px; }
+    header { display: flex; align-items: center; gap: 12px; }
+    h1 { flex: 1; margin: 0; font-size: 1.6rem; }
+    #user { color: #59636e; font-size: .9rem; }
+    button { cursor: pointer; border: 0; border-radius: 6px; padding: 8px 14px; background: #ff9900; color: #111; font-weight: 600; }
+    button.link { background: none; color: #b42318; padding: 4px 8px; }
+    button.secondary { background: #fff; border: 1px solid #d0d7de; }
+    form { display: flex; gap: 8px; margin: 24px 0 12px; }
+    input[type=text] { flex: 1; padding: 8px 10px; border: 1px solid #d0d7de; border-radius: 6px; font-size: 1rem; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #d0d7de; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+    li span { flex: 1; overflow-wrap: anywhere; }
+    li.done span { text-decoration: line-through; color: #8c959f; }
+    #msg { color: #b42318; min-height: 1.2em; }
+    .intro { margin-top: 24px; color: #59636e; }
+    footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #d0d7de; color: #59636e; font-size: .9rem; line-height: 1.5; }
+    footer h2 { font-size: 1rem; color: #1f2328; margin: 0 0 8px; }
+    footer a { color: #0a66c2; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>To-Do</h1>
+      <span id="user"></span>
+      <button id="auth">Sign in</button>
+    </header>
+    <div class="intro" id="intro">
+      <p>Sign in or create an account to save your tasks in the cloud, or try it without an account.</p>
+      <button id="guest" class="secondary">Continue as guest</button>
+    </div>
+    <form id="add" hidden>
+      <input type="text" id="title" placeholder="What needs doing?" maxlength="200" required>
+      <button>Add</button>
+    </form>
+    <p id="msg"></p>
+    <ul id="list"></ul>
+
+    <footer>
+      <h2>About this project</h2>
+      <p>This is my graduation project for Manara AWS 2: Becoming a Solutions Architect. It's a simple to-do list that runs on AWS and its serverless.</p>
+      <p>You can try it as a guest and your tasks will stay in your browser. If you create an account, your tasks are saved in the cloud and you can see them from any device.</p>
+      <p>Built with Amazon Cognito for login, API Gateway and Lambda for the backend, DynamoDB for storing tasks, and S3 with CloudFront for hosting this page.</p>
+      <p>Made by Abdelrahman Mohammed Shehata. <a href="https://www.linkedin.com/in/abdelrahman-shehata-516439297/" target="_blank" rel="noopener">LinkedIn</a></p>
+    </footer>
+  </main>
+
+  <script>
+    const cfg = window.APP_CONFIG;
+    const redirectUri = location.origin + "/";
+    const $ = (id) => document.getElementById(id);
+
+    // After signing in, the Cognito Hosted UI redirects back with #id_token=... in the URL.
+    if (location.hash.includes("id_token=")) {
+      sessionStorage.setItem("idToken", new URLSearchParams(location.hash.slice(1)).get("id_token"));
+      history.replaceState(null, "", redirectUri);
+    }
+
+    function readClaims(token) {
+      return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    }
+
+    let token = sessionStorage.getItem("idToken");
+    if (token && readClaims(token).exp * 1000 < Date.now()) {
+      sessionStorage.removeItem("idToken");
+      token = null;
+    }
+
+    function signIn() {
+      location.href = `${cfg.cognitoDomain}/login?client_id=${cfg.clientId}` +
+        `&response_type=token&scope=openid+email&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    }
+
+    function signOut() {
+      sessionStorage.removeItem("idToken");
+      location.href = `${cfg.cognitoDomain}/logout?client_id=${cfg.clientId}` +
+        `&logout_uri=${encodeURIComponent(redirectUri)}`;
+    }
+
+    async function api(method, path, body) {
+      const res = await fetch(cfg.apiUrl + path, {
+        method,
+        headers: { Authorization: token, "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (res.status === 401) { sessionStorage.removeItem("idToken"); signIn(); return null; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || `Request failed (${res.status})`);
+      }
+      return res.status === 204 ? null : res.json();
+    }
+
+    // Signed-in users: tasks are stored in DynamoDB through the API.
+    const cloudStore = {
+      list: () => api("GET", "/todos"),
+      add: (title) => api("POST", "/todos", { title }),
+      update: (id, changes) => api("PUT", `/todos/${id}`, changes),
+      remove: (id) => api("DELETE", `/todos/${id}`),
+    };
+
+    // Guests: tasks are stored only in this browser (localStorage), nothing is sent to AWS.
+    const guestStore = {
+      load() {
+        try { return JSON.parse(localStorage.getItem("guestTodos")) || []; } catch { return []; }
+      },
+      save(todos) { localStorage.setItem("guestTodos", JSON.stringify(todos)); },
+      async list() { return this.load(); },
+      async add(title) {
+        const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        this.save([...this.load(), { todoId: id, title, done: false, createdAt: new Date().toISOString() }]);
+      },
+      async update(id, changes) {
+        this.save(this.load().map((t) => (t.todoId === id ? { ...t, ...changes } : t)));
+      },
+      async remove(id) { this.save(this.load().filter((t) => t.todoId !== id)); },
+    };
+
+    let store = null;
+
+    function render(todos) {
+      const list = $("list");
+      list.replaceChildren();
+      for (const todo of todos) {
+        const li = document.createElement("li");
+        li.className = todo.done ? "done" : "";
+
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = todo.done;
+        box.onchange = () => run(() => store.update(todo.todoId, { done: box.checked }));
+
+        const text = document.createElement("span");
+        text.textContent = todo.title;
+
+        const del = document.createElement("button");
+        del.className = "link";
+        del.textContent = "Delete";
+        del.onclick = () => run(() => store.remove(todo.todoId));
+
+        li.append(box, text, del);
+        list.append(li);
+      }
+    }
+
+    async function run(action) {
+      $("msg").textContent = "";
+      try {
+        if (action) await action();
+        render((await store.list()) || []);
+      } catch (e) {
+        $("msg").textContent = e.message;
+      }
+    }
+
+    if (token) {
+      store = cloudStore;
+      $("user").textContent = readClaims(token).email;
+      $("auth").textContent = "Sign out";
+      $("auth").onclick = signOut;
+    } else if (localStorage.getItem("guest")) {
+      store = guestStore;
+      $("user").textContent = "Guest (saved in this browser)";
+      $("auth").onclick = () => { localStorage.removeItem("guest"); signIn(); };
+    } else {
+      $("auth").onclick = signIn;
+      $("guest").onclick = () => { localStorage.setItem("guest", "1"); location.reload(); };
+    }
+
+    if (store) {
+      $("intro").hidden = true;
+      $("add").hidden = false;
+      $("add").onsubmit = (e) => {
+        e.preventDefault();
+        const title = $("title").value.trim();
+        $("title").value = "";
+        if (title) run(() => store.add(title));
+      };
+      run();
+    }
+  </script>
+</body>
+</html>
